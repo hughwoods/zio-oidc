@@ -21,14 +21,17 @@ jobs:
         with:
           java-version: '8'
 
-      - name: Build & with SBT
-        run: sbt test compile
+      - name: Test with SBT
+        run: sbt test
+
+      - name: Test with SBT
+        run: sbt clean package
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
+          path: '${{ github.workspace }}/target/**/*.jar'
 
   deploy:
     runs-on: ubuntu-latest
