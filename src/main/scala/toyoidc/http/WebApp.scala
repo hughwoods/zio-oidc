@@ -15,5 +15,5 @@ object WebApp extends ZIOAppDefault {
 
   val server =  startUp *> Server.serve(app)
 
-  override val run = server.provide(Server.default)
+  override val run = server.provide(Server.defaultWithPort(80))
 }
