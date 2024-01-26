@@ -1,14 +1,14 @@
 package toyoidc.http
 
-import toyoidc.http.routes.Ping
+import toyoidc.http.routes._
 import zio.{ZIO, ZIOAppDefault}
 import zio.http._
 
 object WebApp extends ZIOAppDefault {
-
   val app: HttpApp[Any] =
     Routes(
-      Ping.route
+      Ping.route,
+      Default.route
     ).toHttpApp
 
   val startUp = ZIO.debug("Starting server ...")
