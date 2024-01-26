@@ -24,8 +24,8 @@ jobs:
       - name: Test with SBT
         run: sbt test
 
-      - name: Test with SBT
-        run: sbt clean package
+      - name: Package with SBT
+        run: sbt clean assembly
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3

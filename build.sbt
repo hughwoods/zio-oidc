@@ -12,3 +12,8 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-test-magnolia" % "2.1-RC1" % Test
     )
   )
+
+assembly / assemblyMergeStrategy := {
+ case PathList("META-INF", _*) => MergeStrategy.discard
+ case _                        => MergeStrategy.first
+}
