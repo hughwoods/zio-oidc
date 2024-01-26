@@ -8,12 +8,15 @@ object WebApp extends ZIOAppDefault {
   val app: HttpApp[Any] =
     Routes(
       Ping.route,
+      Auth.route,
       Default.route
     ).toHttpApp
 
   val startUp = ZIO.debug("Starting server ...")
 
-  val server =  startUp *> Server.serve(app)
+  val server =  startUp *> Server.serve(
+    app @@ Middleware.debug
+  )
 
   override val run = server.provide(Server.defaultWithPort(80))
 }

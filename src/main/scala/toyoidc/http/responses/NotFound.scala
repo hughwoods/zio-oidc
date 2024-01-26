@@ -4,7 +4,7 @@ import zio.http.Path
 import zio.json.{DeriveJsonEncoder, JsonEncoder}
 
 
-case class NotFound(path: Path) extends Error {
+case class NotFound(path: Path) extends ErrorDetail {
   override def errorCode: String = "NotFound"
 }
 

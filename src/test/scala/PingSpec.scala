@@ -4,7 +4,7 @@ import zio.test._
 
 object PingSpec extends ZIOSpecDefault {
   def spec =
-    suite("HelloWorldSpec")(
+    suite("Ping Spec")(
       test("Returns JSON version") {
         for {
           response <- WebApp.app(Request.get("ping"))
