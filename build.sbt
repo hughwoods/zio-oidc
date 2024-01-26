@@ -14,6 +14,3 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-test-magnolia" % "2.1-RC1" % Test
     )
   )
-
-//ToDo: check if we are on SBT >= 1.8.0
-//testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
