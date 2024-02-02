@@ -23,7 +23,8 @@ case class Auth(resourceOwner: ResourceOwner) {
       parseRequest(req) match {
         case Success(_, req) =>
           resourceOwner.authorise(req).map(resp => authorisationResponse(req, resp))
-        case Failure(_, errors) => ZIO.succeed(Response.json(BadRequest(errors).toJson).copy(status = Status.BadRequest))
+        case Failure(_, errors) =>
+          ZIO.succeed(Response.json(BadRequest(errors).toJson).copy(status = Status.BadRequest))
       }
     }
 
@@ -35,54 +36,33 @@ case class Auth(resourceOwner: ResourceOwner) {
       case AuthorisationResponse.Unauthorised(message) => Response.unauthorized(message)
     }
 
-
   def parseRequest(request: Request): Validation[ValidationError, AuthorisationRequest] = {
-    val query = request.url.queryParams
+    val query = RequestParsing.fromQuery(request.url.queryParams) _
     Validation.validateWith(
-      extractResponseType(query),
-      extractClientId(query),
-      extractRedirectLocation(query),
-      extractScope(query),
-      extractState(query)
+      query(Parameters.responseType).flatMap(validateResponseType),
+      query(Parameters.clientId),
+      extractRedirectLocation(request.url.queryParams),
+      query(Parameters.scope).map(Scope),
+      query(Parameters.state).map(State)
     )(AuthorisationRequest)
   }
 
-  def extractResponseType(query: QueryParams): Validation[ValidationError, ResponseType] = {
-    val responseType =
-      for {
-        string <- query.get(Parameters.responseType).toRight(ValidationError.missingParameter(Parameters.responseType))
-        responseType <- responseTypeLookup.get(string).toRight(
-          ValidationError(
-            Parameters.responseType,
-            new ErrorDetail {
-              def errorCode = "InvalidResponseType"
-            }
-          )
-        )
-      } yield responseType
-
-    Validation.fromEither(responseType)
-  }
-
-  def extractClientId(query: QueryParams): Validation[ValidationError, String] = {
-    val clientId = query.get(Parameters.clientId)
-    Validation.fromOptionWith(ValidationError.missingParameter(Parameters.clientId))(clientId)
-  }
-
-  def extractScope(query: QueryParams): Validation[ValidationError, Scope] = {
-    val scope = query.get(Parameters.scope).map(Scope)
-    Validation.fromOptionWith(ValidationError.missingParameter(Parameters.scope))(scope)
-  }
-
-  def extractState(query: QueryParams): Validation[ValidationError, State] = {
-    val state = query.get(Parameters.state).map(State)
-    Validation.fromOptionWith(ValidationError.missingParameter(Parameters.state))(state)
+  def validateResponseType(candidate: String) = {
+    lazy val error = ValidationError(
+        Parameters.responseType,
+        new ErrorDetail {
+          def errorCode = "InvalidResponseType"
+        }
+      )
+    val matched = responseTypeLookup.get(candidate)
+    Validation.fromOptionWith(error)(matched)
   }
 
   def extractRedirectLocation(query: QueryParams): Validation[ValidationError, URL] = {
     val redirectLocation =
       for {
-        string <- query.get(Parameters.redirectLocation).toRight(ValidationError.missingParameter(Parameters.redirectLocation))
+        string <-
+          query.get(Parameters.redirectLocation).toRight(ValidationError.missingParameter(Parameters.redirectLocation))
         url <- decodeAbsoluteUrl(string)
       } yield url
     Validation.fromEither(redirectLocation)
@@ -100,7 +80,7 @@ case class Auth(resourceOwner: ResourceOwner) {
 //   https://datatracker.ietf.org/doc/html/rfc6749#section-3.1.2
     URL.decode(candidate) match {
       case Right(URL(path, abs: Absolute, query, fragment)) => Right(URL(path, abs, query, None))
-      case _ => Left(error)
+      case _                                                => Left(error)
     }
   }
 

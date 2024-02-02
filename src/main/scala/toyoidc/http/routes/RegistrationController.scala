@@ -29,14 +29,9 @@ case class RegistrationController(clientRegistry: ClientRegistrationService) {
   }
 
   def parse(request: Request) = {
-    val name = extractName(request.url.queryParams)
+    val name = RequestParsing.fromQuery(request.url.queryParams)(Parameters.name)
     val redirectLocations = extractRedirectLocations(request.url.queryParams)
     Validation.validateWith(name, redirectLocations)((a, b) => (a, b))
-  }
-
-  def extractName(query: QueryParams) = {
-    val name = query.get(Parameters.name)
-    Validation.fromOptionWith(ValidationError.missingParameter(Parameters.name))(name)
   }
 
   def extractRedirectLocations(query: QueryParams): Validation[ValidationError, Chunk[URL]] = {
